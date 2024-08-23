@@ -5,40 +5,47 @@ import os
 from collections import defaultdict
 import random
 
+
 class MakeCFDataSet():
     """
     GraphDataSet 생성
     """
-    def __init__(self, config):
+
+    def __init__(self, config, data_json=None):
         self.config = config
-        self.df = pd.read_csv(os.path.join(self.config.data_path, 'tn_visit_area_info_방문지정보_sum2.csv'), low_memory=False)
+        if data_json is None:
 
-        # 'TRAVEL_ID'가 'd'로 시작하는 데이터 필터링
-        d_starting_data = self.df[self.df['TRAVEL_ID'].str.startswith('d')]
+            self.df = pd.read_csv(os.path.join(self.config.data_path, 'tn_visit_area_info_방문지정보_sum2.csv'),
+                                  low_memory=False)
+            # 'TRAVEL_ID'가 'd'로 시작하는 데이터 필터링
+            d_starting_data = self.df[self.df['TRAVEL_ID'].str.startswith('d')]
 
-        # 2000개 랜덤 샘플링
-        d_starting_sample = d_starting_data.sample(n=2000, random_state=42)
+            # 2000개 랜덤 샘플링
+            d_starting_sample = d_starting_data.sample(n=2000, random_state=42)
 
-        # 나머지 데이터 필터링
-        other_data = self.df[~self.df['TRAVEL_ID'].str.startswith('d')]
+            # 나머지 데이터 필터링
+            other_data = self.df[~self.df['TRAVEL_ID'].str.startswith('d')]
 
-        # 최종 데이터프레임 생성
-        self.df = pd.concat([d_starting_sample, other_data], ignore_index=True)
-        # 인덱스 초기화
-        self.df.reset_index(drop=True, inplace=True)
+            # 최종 데이터프레임 생성
+            self.df = pd.concat([d_starting_sample, other_data], ignore_index=True)
+            # 인덱스 초기화
+            self.df.reset_index(drop=True, inplace=True)
+        else:
+            self.data_json = data_json
+            self.df = pd.DataFrame.from_dict(self.data_json, orient='index')
 
         self.item_encoder, self.item_decoder = self.generate_encoder_decoder('POI_ID')
         self.user_encoder, self.user_decoder = self.generate_encoder_decoder('TRAVEL_ID')
         self.num_item, self.num_user = len(self.item_encoder), len(self.user_encoder)
 
-        self.df['item_idx'] = self.df['POI_ID'].apply(lambda x : self.item_encoder[x])
-        self.df['user_idx'] = self.df['TRAVEL_ID'].apply(lambda x : self.user_encoder[x])
+        self.df['item_idx'] = self.df['POI_ID'].apply(lambda x: self.item_encoder[x])
+        self.df['user_idx'] = self.df['TRAVEL_ID'].apply(lambda x: self.user_encoder[x])
 
         self.exist_users = [i for i in range(self.num_user)]
         self.exist_items = [i for i in range(self.num_item)]
         self.user_train, self.user_valid = self.generate_sequence_data()
 
-    def generate_encoder_decoder(self, col : str) -> dict:
+    def generate_encoder_decoder(self, col: str) -> dict:
         """
         encoder, decoder 생성
 
@@ -75,11 +82,11 @@ class MakeCFDataSet():
             np.random.seed(self.config.seed)
 
             user_total = users[user]
-            valid = np.random.choice(user_total, size = self.config.valid_samples, replace = False).tolist()
+            valid = np.random.choice(user_total, size=self.config.valid_samples, replace=False).tolist()
             train = list(set(user_total) - set(valid))
 
             user_train[user] = train
-            user_valid[user] = valid # valid_samples 개수 만큼 검증에 활용 (현재 Task와 가장 유사하게)
+            user_valid[user] = valid  # valid_samples 개수 만큼 검증에 활용 (현재 Task와 가장 유사하게)
 
         return user_train, user_valid
 
@@ -101,8 +108,8 @@ class MakeCFDataSet():
 
     def get_train_valid_data(self):
         return self.user_train, self.user_valid
-    
-    
+
+
 class CFDataset(Dataset):
     def __init__(self, user_train):
         self.users = []

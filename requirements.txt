@@ -42,3 +42,10 @@ typing_extensions==4.12.2
 tzdata==2024.1
 wcwidth==0.2.5
 zope.interface==7.0.1
+
+fastapi==0.110.0
+uvicorn==0.27.1
+torch==2.4.0  # 이미 목록에 있지만, 호환성을 위해 다시 명시합니다.
+pandas==2.2.2  # 이미 목록에 있지만, 호환성을 위해 다시 명시합니다.
+numpy==1.26.4  # 이미 목록에 있지만, 호환성을 위해 다시 명시합니다.
+pydantic==2.6.3
