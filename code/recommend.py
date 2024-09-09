@@ -23,17 +23,14 @@ def get_output_queue(queue):
     output_queue = queue
 
 
-def recommend_poi(model, make_cf_data_set, top_k=10):
+def recommend_poi(model, travel_id=None,make_cf_data_set=None, top_k=10):
     """
     주어진 TRAVEL_ID에 대해 POI_ID와 점수를 추천하는 메소드.
     """
-    global input_queue, output_queue
-
-    travel_id = input_queue.get()
-
+    if travel_id is None:
+        return
     user_idx = make_cf_data_set.user_encoder.get(travel_id)
     if user_idx is None:
-        output_queue.put([])
         return
 
     all_items = make_cf_data_set.exist_items
@@ -58,4 +55,4 @@ def recommend_poi(model, make_cf_data_set, top_k=10):
             poi_id = "Unknown"  # 또는 다른 기본값으로 설정
         recommendations.append((str(poi_id), float(score)))
 
-    output_queue.put(recommendations)
+    return recommendations

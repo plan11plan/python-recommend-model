@@ -117,6 +117,9 @@ class CFDataset(Dataset):
         for user in user_train.keys():
             self.items += user_train[user]
             self.users += [user] * len(user_train[user])
+        print("me")
+        print(len(self.users))
+        print(len(self.items))
 
     def __len__(self):
         return len(self.users)
